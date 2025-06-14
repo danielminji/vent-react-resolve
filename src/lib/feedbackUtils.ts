@@ -12,4 +12,19 @@ export function getFeedbackForVent(text: string): string {
   } else {
     return "Thank you for sharing. Remember that workplace conflicts are often opportunities for growth and better understanding. Consider approaching this situation with curiosity rather than frustration.";
   }
+   } else if (keywords.includes('conflict') || keywords.includes('argument') || keywords.includes('clash') || keywords.includes('tension') || keywords.includes('disagree')) {
+    return "Workplace conflict is tough. Try to stay calm and focus on shared goals. Clear communication and mediation can often ease tension.";
+
+  } else if (keywords.includes('ignored') || keywords.includes('not heard') || keywords.includes('excluded') || keywords.includes('left out') || keywords.includes('invisible')) {
+    return "Feeling ignored or excluded can be hurtful. Try to express your feelings and ask to be more involved in discussions or decisions.";
+
+  } else if (keywords.includes('unrecognized') || keywords.includes('no credit') || keywords.includes('not appreciated') || keywords.includes('taken for granted')) {
+    return "Not feeling appreciated can impact your motivation. Sometimes a direct conversation about your contributions can help clarify your value.";
+
+  } else if (keywords.includes('bad boss') || keywords.includes('poor leadership') || keywords.includes('no direction') || keywords.includes('unavailable manager')) {
+    return "Poor leadership can be frustrating. Try seeking clarity through regular check-ins or mentorship to help set clearer expectations.";
+
+  } else {
+    return "Thank you for sharing. Remember that workplace conflicts are often opportunities for growth and better understanding. Consider approaching this situation with curiosity rather than frustration.";
+  }
 }

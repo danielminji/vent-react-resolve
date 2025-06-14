@@ -6,18 +6,20 @@ import { Mic } from 'lucide-react';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { VoiceVisualizer } from '@/components/VoiceVisualizer';
 import { BossAvatar } from '@/components/BossAvatar';
-import { FeedbackPanel } from '@/components/FeedbackPanel';
 import { toast } from 'sonner';
-import { getFeedbackForVent } from '@/lib/feedbackUtils';
+import { generateBossReport } from '../lib/feedbackUtils';
+import { Input } from '@/components/ui/input';
+import emailjs from '@emailjs/browser';
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<'upload' | 'venting' | 'feedback'>('upload');
+  const [currentStep, setCurrentStep] = useState<'upload' | 'venting'>('upload'); // 'feedback' removed
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [ventText, setVentText] = useState('');
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const [bossExpression, setBossExpression] = useState<'neutral' | 'confused' | 'anxious' | 'afraid'>('neutral');
-  const [feedback, setFeedback] = useState('');
+  // feedback state and setFeedback are removed.
+  const [bossEmail, setBossEmail] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -102,9 +104,7 @@ const Index = () => {
     return recognition;
   }, []);
 
-  const generateFeedback = useCallback((text: string) => {
-    return getFeedbackForVent(text);
-  }, []);
+  // generateFeedback useCallback is removed.
 
   const startVenting = async () => {
     const stream = await setupAudioAnalysis();
@@ -143,16 +143,27 @@ const Index = () => {
       audioContextRef.current.close();
     }
     
-    // Generate feedback based on vent text
-    const generatedFeedback = generateFeedback(ventText);
-    setFeedback(generatedFeedback);
-    
-    setTimeout(() => {
-      setCurrentStep('feedback');
-      setBossExpression('neutral');
-    }, 1000);
-    
-    toast.success('Processing your feedback...');
+    // Generate report for the boss
+    const bossReport = generateBossReport(ventText);
+
+    // Prepare template parameters for EmailJS
+    const templateParams = {
+      boss_email: bossEmail,
+      rephrased_vent_statements: bossReport.rephrased_vent_statements,
+      suggestions_for_boss: bossReport.suggestions_for_boss
+    };
+
+    console.log('Attempting to send email with params:', templateParams);
+    emailjs.send('service_1tscokn', 'template_4310005', templateParams, '3zNb3Okj3StN3lJpk')
+      .then((response) => {
+         console.log('SUCCESS sending email via EmailJS!', response.status, response.text);
+         toast.success('Anonymous feedback has been sent.');
+         restartSession(); // Reset state and go to 'upload'
+      }, (err) => {
+         console.error('FAILED to send email via EmailJS. Error:', err);
+         toast.error('Failed to send anonymous feedback. Please check console for details.');
+         restartSession(); // Reset state and go to 'upload'
+      });
   };
 
   const handleAvatarUpload = (imageUrl: string) => {
@@ -163,10 +174,11 @@ const Index = () => {
   const restartSession = () => {
     setCurrentStep('upload');
     setVentText('');
-    setFeedback('');
+    // setFeedback(''); // Removed as feedback state is gone
     setAudioLevel(0);
     setBossExpression('neutral');
     setAvatarImage(null);
+    setBossEmail('');
   };
 
   return (
@@ -187,16 +199,33 @@ const Index = () => {
           {currentStep === 'upload' && (
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
+                {/* Card for Boss's Info and Avatar Upload */}
                 <Card className="p-8">
-                  <h2 className="text-2xl font-semibold mb-4">Upload Your Boss's Photo</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Boss's Information</h2>
                   <p className="text-gray-600 mb-6">
-                    Upload a photo to create a 3D avatar. Don't worry - this stays completely private and helps you visualize your conversation.
+                    Please provide your boss's email. Your feedback will be sent anonymously.
+                    Upload a photo to create a 3D avatar. This stays private and helps you visualize.
                   </p>
-                  <AvatarUpload onUpload={handleAvatarUpload} />
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="bossEmail" className="block text-sm font-medium text-gray-700 mb-1">Boss's Email</label>
+                      <Input
+                        type="email"
+                        id="bossEmail"
+                        placeholder="boss@example.com"
+                        value={bossEmail}
+                        onChange={(e) => setBossEmail(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <AvatarUpload onUpload={handleAvatarUpload} />
+                  </div>
                 </Card>
               </div>
               
-              <div className="text-center space-y-6">
+              {/* Right side: Avatar Preview and Start Button */}
+              <div className="text-center space-y-6 flex flex-col items-center">
+                {/* Avatar Preview */}
                 <div className="w-64 h-64 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                   {avatarImage ? (
                     <img src={avatarImage} alt="Boss Avatar" className="w-full h-full object-cover rounded-full" />
@@ -208,15 +237,21 @@ const Index = () => {
                   )}
                 </div>
                 
+                {/* Start Venting Button - visible if avatar is uploaded, enabled if email is also provided */}
                 {avatarImage && (
                   <Button 
                     onClick={startVenting}
                     size="lg"
                     className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    disabled={!bossEmail}
                   >
                     <Mic className="mr-2 h-5 w-5" />
                     Start Venting
                   </Button>
+                )}
+                {/* Helper text if avatar is uploaded but email is missing */}
+                {avatarImage && !bossEmail && (
+                  <p className="text-sm text-gray-500 mt-2">Please enter the boss's email to start venting.</p>
                 )}
               </div>
             </div>
@@ -258,15 +293,7 @@ const Index = () => {
             </div>
           )}
 
-          {currentStep === 'feedback' && (
-            <div className="max-w-4xl mx-auto">
-              <FeedbackPanel 
-                feedback={feedback}
-                avatarImage={avatarImage}
-                onRestart={restartSession}
-              />
-            </div>
-          )}
+          {/* Removed FeedbackPanel section for currentStep === 'feedback' */}
         </div>
       </div>
     </div>

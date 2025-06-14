@@ -10,16 +10,20 @@ import { toast } from 'sonner';
 import { generateBossReport } from '../lib/feedbackUtils';
 import { Input } from '@/components/ui/input';
 import emailjs from '@emailjs/browser';
+import { AvatarCreator, AvatarExportedEvent } from '@readyplayerme/react-avatar-creator'; // Added RPM
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'; // Added Dialog
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<'upload' | 'venting'>('upload'); // 'feedback' removed
+  const [currentStep, setCurrentStep] = useState<'upload' | 'venting'>('upload');
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [ventText, setVentText] = useState('');
-  const [avatarImage, setAvatarImage] = useState<string | null>(null);
+  const [avatarImage, setAvatarImage] = useState<string | null>(null); // For 2D preview
   const [bossExpression, setBossExpression] = useState<'neutral' | 'confused' | 'anxious' | 'afraid'>('neutral');
-  // feedback state and setFeedback are removed.
   const [bossEmail, setBossEmail] = useState('');
+  const [avatarModelUrl, setAvatarModelUrl] = useState<string | null>(null); // For 3D model
+  const [showAvatarCreator, setShowAvatarCreator] = useState(false);
+  // const [isCreatingAvatar, setIsCreatingAvatar] = useState(false); // For future spinner
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -179,12 +183,42 @@ const Index = () => {
     setBossExpression('neutral');
     setAvatarImage(null);
     setBossEmail('');
+    setAvatarModelUrl(null); // Added to restartSession
+    setShowAvatarCreator(false); // Added to restartSession
+    // setIsCreatingAvatar(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
       {/* Header */}
       <div className="container mx-auto px-4 py-8">
+        {/* Avatar Creator Dialog */}
+        <Dialog open={showAvatarCreator} onOpenChange={setShowAvatarCreator}>
+          <DialogContent className="max-w-4xl h-[80vh] p-0"> {/* Adjusted for more space */}
+            <DialogHeader className="p-4">
+              <DialogTitle>Create Your Boss's 3D Avatar</DialogTitle>
+              <DialogDescription>
+                You are now in the Ready Player Me editor.
+                If your uploaded photo doesn't automatically appear, you might need to re-select it.
+                Customize the avatar as you see fit, then click "Next" or "Export Avatar" to save it.
+              </DialogDescription>
+            </DialogHeader>
+            <div style={{ width: '100%', height: 'calc(80vh - 100px)', border: 'none' }}> {/* Adjusted height */}
+              <AvatarCreator
+                subdomain="bossvent-demo"
+                config={{ clearCache: true, bodyType: 'fullbody', language: 'en' }}
+                onAvatarExported={(event: AvatarExportedEvent) => {
+                  console.log(`Avatar exported: ${event.data.url}`);
+                  setAvatarModelUrl(event.data.url);
+                  setShowAvatarCreator(false);
+                  toast.success('3D Avatar created! You can now start venting.');
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Main Page Content */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
             Boss Vent
@@ -219,39 +253,53 @@ const Index = () => {
                       />
                     </div>
                     <AvatarUpload onUpload={handleAvatarUpload} />
+                    {/* Button to trigger Avatar Creator */}
+                    {avatarImage && bossEmail && (
+                      <Button
+                        onClick={() => setShowAvatarCreator(true)}
+                        variant="outline"
+                        className="w-full mt-4"
+                      >
+                        Create / Customize 3D Avatar
+                      </Button>
+                    )}
                   </div>
                 </Card>
               </div>
               
               {/* Right side: Avatar Preview and Start Button */}
               <div className="text-center space-y-6 flex flex-col items-center">
-                {/* Avatar Preview */}
+                {/* Avatar Preview (2D) */}
                 <div className="w-64 h-64 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                   {avatarImage ? (
-                    <img src={avatarImage} alt="Boss Avatar" className="w-full h-full object-cover rounded-full" />
+                    <img src={avatarImage} alt="Boss Avatar Preview" className="w-full h-full object-cover rounded-full" />
                   ) : (
                     <div className="text-gray-400 text-center">
                       <div className="text-4xl mb-2">👤</div>
-                      <div>Avatar Preview</div>
+                      <div>Upload Photo for Preview</div>
                     </div>
                   )}
                 </div>
-                
-                {/* Start Venting Button - visible if avatar is uploaded, enabled if email is also provided */}
-                {avatarImage && (
-                  <Button 
-                    onClick={startVenting}
-                    size="lg"
-                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                    disabled={!bossEmail}
-                  >
-                    <Mic className="mr-2 h-5 w-5" />
-                    Start Venting
-                  </Button>
+                {avatarModelUrl && (
+                  <p className="text-sm text-green-600">✓ 3D Avatar Ready</p>
                 )}
-                {/* Helper text if avatar is uploaded but email is missing */}
-                {avatarImage && !bossEmail && (
-                  <p className="text-sm text-gray-500 mt-2">Please enter the boss's email to start venting.</p>
+
+                {/* Start Venting Button - enabled if 3D model URL and email are present */}
+                <Button
+                  onClick={startVenting}
+                  size="lg"
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  disabled={!avatarModelUrl || !bossEmail}
+                >
+                  <Mic className="mr-2 h-5 w-5" />
+                  Start Venting
+                </Button>
+                {(!avatarModelUrl || !bossEmail) && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Please {(!bossEmail && !avatarModelUrl) ? "enter boss's email, upload a photo, and create a 3D avatar" :
+                            !avatarModelUrl ? "create the 3D avatar" :
+                            !bossEmail ? "enter the boss's email" : ""} to start venting.
+                  </p>
                 )}
               </div>
             </div>
@@ -285,9 +333,10 @@ const Index = () => {
               
               <div className="flex items-center justify-center">
                 <BossAvatar 
-                  imageUrl={avatarImage} 
+                  modelUrl={avatarModelUrl} // Changed from imageUrl
                   expression={bossExpression}
                   audioLevel={audioLevel}
+                  // imageUrl={avatarImage} // Temporarily pass both if needed for fallback, or remove if Visage replaces 2D
                 />
               </div>
             </div>

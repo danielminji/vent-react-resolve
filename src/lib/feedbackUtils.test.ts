@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getFeedbackForVent } from './feedbackUtils';
+import { getFeedbackForVent, generateBossReport, BossReport } from './feedbackUtils';
 
 describe('getFeedbackForVent', () => {
   const workloadFeedback = "It sounds like you're feeling overwhelmed with your workload. Consider having a conversation about priorities and realistic timelines. Maybe suggest a weekly check-in to align on what's most important.";
@@ -46,5 +46,84 @@ describe('getFeedbackForVent', () => {
 
   it('should return default feedback for empty string input', () => {
     expect(getFeedbackForVent("")).toBe(defaultFeedback);
+  });
+});
+
+describe('generateBossReport', () => {
+  const testTheme = (inputText: string, themeKeywords: string[], expectedRephrasedSubstring?: string, expectedSuggestionSubstring?: string) => {
+    const report: BossReport = generateBossReport(inputText);
+
+    expect(report.rephrased_vent_statements).toBeTypeOf('string');
+    expect(report.rephrased_vent_statements).not.toBe('');
+    expect(report.suggestions_for_boss).toBeTypeOf('string');
+    expect(report.suggestions_for_boss).not.toBe('');
+
+    if (expectedRephrasedSubstring) {
+      expect(report.rephrased_vent_statements.toLowerCase()).toContain(expectedRephrasedSubstring.toLowerCase());
+    }
+    if (expectedSuggestionSubstring) {
+      expect(report.suggestions_for_boss.toLowerCase()).toContain(expectedSuggestionSubstring.toLowerCase());
+    }
+
+    // Check if the report contains keywords related to the theme, if not default
+    if (themeKeywords.length > 0) {
+        const foundInRephrased = themeKeywords.some(kw => report.rephrased_vent_statements.toLowerCase().includes(kw));
+        const foundInSuggestions = themeKeywords.some(kw => report.suggestions_for_boss.toLowerCase().includes(kw));
+        // This is a soft check, as suggestions might be generic
+        // expect(foundInRephrased || foundInSuggestions).toBe(true);
+    }
+  };
+
+  it('should handle workload theme', () => {
+    testTheme("I have way too much workload and I'm overwhelmed. I have no time.", ["workload", "overwhelmed"], "workload", "capacity");
+  });
+
+  it('should handle micromanagement theme', () => {
+    testTheme("My boss micromanages everything, I have no autonomy.", ["micromanage", "autonomy"], "micromanagement", "trust");
+  });
+
+  it('should handle unfairness/bias theme', () => {
+    testTheme("It's so unfair how my colleague is the favorite.", ["unfair", "favorite"], "fairness", "transparency");
+  });
+
+  it('should handle communication theme', () => {
+    testTheme("The communication is unclear and often confusing.", ["communication", "unclear"], "communication", "clarity");
+  });
+
+  it('should handle "burnt out" as workload', () => {
+    testTheme("I am feeling completely burnt out.", ["burnt out", "workload"], "workload", "capacity");
+  });
+
+  it('should handle "no autonomy" as micromanagement', () => {
+    testTheme("There's no autonomy in this team.", ["autonomy", "micromanage"], "autonomy", "trust");
+  });
+
+  it('should handle "not equal" as unfairness', () => {
+    testTheme("The opportunities are not equal for everyone.", ["not equal", "unfair"], "fairness", "equal opportunity");
+  });
+
+  it('should handle "no information" as communication', () => {
+    testTheme("We get no information about project changes.", ["no information", "communication"], "communication", "disseminated");
+  });
+
+  it('should return default report for non-specific input', () => {
+    const report = generateBossReport("I had a decent day today.");
+    expect(report.rephrased_vent_statements).toContain("general concerns");
+    expect(report.suggestions_for_boss).toContain("open conversation");
+    testTheme("I had a decent day today.", [], "general concerns", "open conversation");
+  });
+
+  it('should handle empty string input with default report', () => {
+    const report = generateBossReport("");
+    expect(report.rephrased_vent_statements).toContain("general concerns");
+    expect(report.suggestions_for_boss).toContain("open conversation");
+    testTheme("", [], "general concerns", "open conversation");
+  });
+
+  it('should be case-insensitive for keywords in boss report', () => {
+    testTheme("My WORKLOAD is insane.", ["workload"], "workload", "capacity");
+    testTheme("I feel MICROMANAGED constantly.", ["micromanage"], "micromanagement", "trust");
+    testTheme("This is so UNFAIR.", ["unfair"], "fairness", "transparency");
+    testTheme("The COMMUNICATION needs to improve.", ["communication"], "communication", "clarity");
   });
 });

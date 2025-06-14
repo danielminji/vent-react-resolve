@@ -47,11 +47,13 @@ const Index = () => {
   }, []);
 
   const analyzeAudio = useCallback(() => {
+    console.log('analyzeAudio called, isRecording:', isRecording);
     if (!analyserRef.current) return;
     
     const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
+    console.log('analyzeAudio - dataArray slice (first 10):', dataArray.slice(0, 10));
     
     const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
     const normalizedLevel = average / 255;
@@ -69,7 +71,7 @@ const Index = () => {
     }
     setBossExpression(newExpression);
     console.log('analyzeAudio - normalizedLevel:', normalizedLevel, 'newExpression:', newExpression);
-  }, []);
+  }, [isRecording, setAudioLevel, setBossExpression]);
 
   const setupSpeechRecognition = useCallback(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {

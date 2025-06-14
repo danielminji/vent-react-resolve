@@ -9,6 +9,7 @@ interface BossAvatarProps {
 }
 
 export const BossAvatar: React.FC<BossAvatarProps> = ({ imageUrl, expression, audioLevel }) => {
+  console.log('BossAvatar props - expression:', expression, 'audioLevel:', audioLevel);
   const getExpressionStyle = () => {
     const intensity = audioLevel;
     

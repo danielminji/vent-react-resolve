@@ -1,16 +1,15 @@
-// src/components/BossAvatar.tsx
-import React from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Avatar } from '@readyplayerme/visage';
+import { Canvas } from '@react-three/fiber'; // useFrame removed as it's not used in this step
+import { OrbitControls, useGLTF, Environment } from '@react-three/drei'; // useAnimations removed
+import * as THREE from 'three';
 
 interface BossAvatarProps {
   modelUrl: string | null;
-  expression: 'neutral' | 'confused' | 'anxious' | 'afraid'; // Kept for future use
-  audioLevel: number; // Kept for future use
+  expression: 'neutral' | 'confused' | 'anxious' | 'afraid';
+  audioLevel: number;
 }
 
-// ARKIT_BLENDSHAPES and getBlendshapeValues definitions should remain here
-// as they don't cause harm if not used by the <Avatar> component's props.
 const ARKIT_BLENDSHAPES = {
   eyeBlinkLeft: 'eyeBlinkLeft',
   eyeBlinkRight: 'eyeBlinkRight',
@@ -69,24 +68,87 @@ const getBlendshapeValues = (
       };
     case 'neutral':
     default:
+      // For neutral, simple blink based on time. A proper useFrame solution would be smoother.
       const blink = Date.now() % 5000 > 4800 ? 1 : 0;
       return {
         ...base,
         [ARKIT_BLENDSHAPES.eyeBlinkLeft]: blink,
         [ARKIT_BLENDSHAPES.eyeBlinkRight]: blink,
-        [ARKIT_BLENDSHAPES.jawOpen]: Math.min(intensity * 0.2, 0.1),
+        [ARKIT_BLENDSHAPES.jawOpen]: Math.min(intensity * 0.2, 0.1), // Minimal movement for neutral speech
       };
   }
 };
 
+interface ModelProps {
+  modelUrl: string;
+  expression: 'neutral' | 'confused' | 'anxious' | 'afraid';
+  audioLevel: number;
+}
+
+function Model({ modelUrl, expression, audioLevel }: ModelProps) {
+  const { scene } = useGLTF(modelUrl);
+  const group = useRef<THREE.Group>(null);
+
+  const headMeshRef = useRef<THREE.SkinnedMesh | null>(null);
+  const teethMeshRef = useRef<THREE.SkinnedMesh | null>(null);
+  // Optional refs for eyes if needed, but often head blendshapes control them.
+  // const eyeLeftMeshRef = useRef<THREE.SkinnedMesh | null>(null);
+  // const eyeRightMeshRef = useRef<THREE.SkinnedMesh | null>(null);
+
+  useEffect(() => {
+    if (scene) {
+      headMeshRef.current = null;
+      teethMeshRef.current = null;
+      // eyeLeftMeshRef.current = null;
+      // eyeRightMeshRef.current = null;
+
+      scene.traverse(object => {
+        if (object instanceof THREE.SkinnedMesh) {
+          if (object.name === "Wolf3D_Head") {
+            headMeshRef.current = object;
+          } else if (object.name === "Wolf3D_Teeth") {
+            teethMeshRef.current = object;
+          }
+          // else if (object.name === "EyeLeft") { eyeLeftMeshRef.current = object; }
+          // else if (object.name === "EyeRight") { eyeRightMeshRef.current = object; }
+        }
+      });
+      // console.log("Head mesh:", headMeshRef.current);
+      // console.log("Teeth mesh:", teethMeshRef.current);
+    }
+  }, [scene]);
+
+  useEffect(() => {
+    const meshesToAnimate = [headMeshRef.current, teethMeshRef.current].filter(Boolean) as THREE.SkinnedMesh[];
+
+    if (meshesToAnimate.length > 0) {
+      const blendValues = getBlendshapeValues(expression, audioLevel);
+      // console.log("Applying blendshapes: ", JSON.stringify(blendValues)); // For debugging
+
+      meshesToAnimate.forEach(mesh => {
+        if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+          Object.keys(blendValues).forEach(key => {
+            const index = mesh.morphTargetDictionary![key];
+            if (index !== undefined) {
+              const currentValue = mesh.morphTargetInfluences![index] || 0;
+              // Using a slightly higher lerp factor for quicker response, adjust as needed
+              mesh.morphTargetInfluences![index] = THREE.MathUtils.lerp(currentValue, blendValues[key], 0.6);
+            }
+          });
+        }
+      });
+    }
+  }, [expression, audioLevel, scene]); // scene dependency helps ensure meshes are found
+
+  // Ensure scale and position are appropriate for typical RPM avatars
+  return <primitive object={scene} ref={group} scale={1.8} position={[0, -1.75, 0]} />; // Adjusted scale & position
+}
 
 export const BossAvatar: React.FC<BossAvatarProps> = ({
   modelUrl,
   expression,
   audioLevel,
 }) => {
-  // const blendshapes = getBlendshapeValues(expression, audioLevel); // Ensure this is commented out
-
   if (!modelUrl) {
     return (
       <Card className="p-8 text-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -102,26 +164,29 @@ export const BossAvatar: React.FC<BossAvatarProps> = ({
   return (
     <Card className="p-8 text-center bg-gradient-to-br from-blue-50 to-indigo-50 relative">
       <h3 className="text-xl font-semibold mb-6">Boss Avatar (3D)</h3>
-      <div className="w-64 h-64 mx-auto rounded-full border-4 overflow-hidden">
-        <Avatar
-          key={modelUrl} // Added key prop
-          modelSrc={modelUrl}
-          style={{ width: '100%', height: '100%', display: 'block' }}
-          cameraInitialDistance={1.5}
-          cameraTargetHeight={1.6}
-          ambientLightIntensity={0.8}
-          directionalLightIntensity={2.0}
-          // blendshapes={blendshapes} // Ensure this is commented out
-          headMovement={true}
-          animationSrc={undefined}
-          custom={{}} // Ensure this is present
-        />
+      <div className="w-full h-80 mx-auto rounded-lg border-2 overflow-hidden bg-gray-300">
+        <Canvas camera={{ position: [0, -0.2, 2.0], fov: 45 }}> {/* Adjusted camera y and z */}
+          <ambientLight intensity={0.9} />
+          <directionalLight
+            position={[3, 4, 2.5]} // Adjusted light position
+            intensity={2.2}
+          />
+           <Environment preset="sunset" /> {/* Changed preset back to sunset for warmer lighting */}
+          <Suspense fallback={null}>
+            <Model modelUrl={modelUrl} expression={expression} audioLevel={audioLevel} />
+          </Suspense>
+          <OrbitControls
+            target={[0, -0.7, 0]} // Adjusted target further down
+            enablePan={true}
+            enableZoom={true}
+          />
+        </Canvas>
       </div>
       <div className="mt-4 space-y-2">
         <div className="text-sm font-medium capitalize text-gray-700">
-          Displaying 3D Model (Expressions Currently Disabled for Test)
+          Current State: {expression}
         </div>
-         <div className="text-xs text-gray-500">Expression state: {expression}, Audio: {audioLevel.toFixed(2)}</div>
+        <div className="text-xs text-gray-500">Audio: {audioLevel.toFixed(2)}</div>
       </div>
     </Card>
   );

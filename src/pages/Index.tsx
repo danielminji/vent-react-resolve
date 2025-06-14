@@ -59,15 +59,16 @@ const Index = () => {
     setAudioLevel(normalizedLevel);
     
     // Update boss expression based on audio level
-    if (normalizedLevel > 0.7) {
-      setBossExpression('afraid');
-    } else if (normalizedLevel > 0.4) {
-      setBossExpression('anxious');
-    } else if (normalizedLevel > 0.2) {
-      setBossExpression('confused');
-    } else {
-      setBossExpression('neutral');
+    let newExpression: 'neutral' | 'confused' | 'anxious' | 'afraid' = 'neutral';
+    if (normalizedLevel > 0.6) { // Changed from 0.7
+      newExpression = 'afraid';
+    } else if (normalizedLevel > 0.3) { // Changed from 0.4
+      newExpression = 'anxious';
+    } else if (normalizedLevel > 0.15) { // Changed from 0.2
+      newExpression = 'confused';
     }
+    setBossExpression(newExpression);
+    console.log('analyzeAudio - normalizedLevel:', normalizedLevel, 'newExpression:', newExpression);
   }, []);
 
   const setupSpeechRecognition = useCallback(() => {

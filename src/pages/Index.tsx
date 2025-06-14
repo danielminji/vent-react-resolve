@@ -205,7 +205,7 @@ const Index = () => {
             </DialogHeader>
             <div style={{ width: '100%', height: 'calc(80vh - 100px)', border: 'none' }}> {/* Adjusted height */}
               <AvatarCreator
-                subdomain="bossvent-demo"
+                subdomain="bossvent" // Changed from "bossvent-demo"
                 config={{ clearCache: true, bodyType: 'fullbody', language: 'en' }}
                 onAvatarExported={(event: AvatarExportedEvent) => {
                   console.log(`Avatar exported: ${event.data.url}`);

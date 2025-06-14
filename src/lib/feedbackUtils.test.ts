@@ -14,6 +14,30 @@ describe('getFeedbackForVent', () => {
     expect(getFeedbackForVent("There's just too much to do")).toBe(workloadFeedback);
   });
 
+  it('should return conflict feedback for "conflict" keywords', () => {
+    expect(getFeedbackForVent("There is a lot of tension between me and my colleague")).toBe(conflictFeedback);
+    expect(getFeedbackForVent("I had an argument with my teammate")).toBe(conflictFeedback);
+    expect(getFeedbackForVent("We're constantly clashing on ideas")).toBe(conflictFeedback);
+  });
+
+  it('should return ignored feedback for "ignored" keywords', () => {
+    expect(getFeedbackForVent("I feel completely left out in meetings")).toBe(ignoredFeedback);
+    expect(getFeedbackForVent("My opinions are often ignored")).toBe(ignoredFeedback);
+    expect(getFeedbackForVent("No one listens to me")).toBe(ignoredFeedback);
+  });
+
+  it('should return unrecognized feedback for "unrecognized" keywords', () => {
+    expect(getFeedbackForVent("I never get credit for my work")).toBe(unrecognizedFeedback);
+    expect(getFeedbackForVent("I feel taken for granted")).toBe(unrecognizedFeedback);
+    expect(getFeedbackForVent("No one appreciates what I do")).toBe(unrecognizedFeedback);
+  });
+
+  it('should return bad boss feedback for "bad boss" keywords', () => {
+    expect(getFeedbackForVent("My manager is never around when I need support")).toBe(badBossFeedback);
+    expect(getFeedbackForVent("There's no direction from leadership")).toBe(badBossFeedback);
+    expect(getFeedbackForVent("My boss has no idea what the team is doing")).toBe(badBossFeedback);
+  });
+
   it('should return micromanage feedback for "micromanage" keywords', () => {
     expect(getFeedbackForVent("I feel my boss tries to control everything")).toBe(micromanageFeedback);
     expect(getFeedbackForVent("My manager tends to micromanage our team.")).toBe(micromanageFeedback);

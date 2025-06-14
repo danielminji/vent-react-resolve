@@ -40,28 +40,28 @@ export const generateBossReport = (text: string): BossReport => {
   // Theme Definitions
   const themes = [
     {
-      name: "Workload",
-      keywords: ["workload", "too much", "overwhelmed", "burnt out", "no time", "unrealistic deadlines", "no support", "stretched too thin"],
-      rephrased: "Concerns were expressed about the current workload, with mentions of feeling overwhelmed, pressed for time, or facing unrealistic expectations. This may indicate a struggle to manage tasks effectively or that the volume of work is perceived as unsustainable.",
-      suggestion: "Review current task distribution, deadlines, and available support for this team member. Open a discussion about their capacity, priorities, and any perceived unrealistic deadlines. Explore options for delegation, reprioritization, or providing additional resources to ensure expectations are manageable."
+      name: "Workload & Burnout",
+      keywords: ["workload", "too much", "overwhelmed", "burnt out", "unrealistic deadlines", "stretched thin", "no support"],
+      rephrased: "The employee is expressing significant stress related to their workload. They may feel that expectations are unrealistic, deadlines are unmanageable, or that they lack the necessary support, leading to feelings of being overwhelmed and potentially approaching burnout.",
+      suggestion: "It might be beneficial to review this employee's current projects and deadlines. Consider asking: 'What does your current workload look like to you?' or 'Is there anything we can deprioritize to ensure you have a manageable workload?' This can open a conversation about realistic expectations and resource allocation."
     },
     {
-      name: "Micromanagement",
-      keywords: ["micromanage", "control", "trust", "no autonomy", "breathing down neck", "no freedom", "watch everything"],
-      rephrased: "The feedback suggests a feeling of being overly controlled or lacking trust and autonomy. Current management practices might be perceived as micromanagement, potentially impacting their sense of ownership and motivation.",
-      suggestion: "Focus on building trust by providing clear objectives and then allowing space for independent work. Offer support and guidance rather than constant oversight. Clearly define responsibilities and empower team members to make decisions within their scope. Ensure they feel they have the freedom to perform their role effectively."
+      name: "Micromanagement & Autonomy",
+      keywords: ["micromanage", "control", "trust", "no autonomy", "breathing down my neck", "no freedom"],
+      rephrased: "The employee feels a lack of trust and autonomy in their role. They may perceive the current management style as overly controlling, which can stifle their sense of ownership and motivation. They are likely looking for more space to perform their duties independently.",
+      suggestion: "Consider ways to demonstrate trust. Could you define the desired outcome of a project and let them determine the process? Try asking: 'I want you to take the lead on this. What do you need from me to be successful?' This can empower them and build confidence."
     },
     {
-      name: "Unfairness/Bias",
-      keywords: ["unfair", "bias", "favorite", "not equal", "different treatment", "scold", "punish", "blame", "take credit", "double standard", "singled out"],
-      rephrased: "Concerns about fairness, bias, or unequal treatment have been raised. This could relate to task assignments, recognition, opportunities, disciplinary actions, or how their contributions are acknowledged compared to others.",
-      suggestion: "Ensure transparency and consistency in decision-making processes, particularly around opportunities, task distribution, recognition, and disciplinary actions. Objectively assess situations for potential bias. Foster an environment of equal opportunity, fair treatment, and impartial evaluation for all team members. Address any perceptions of favoritism or scapegoating directly."
+      name: "Unfair Treatment & Bias",
+      keywords: ["unfair", "bias", "favorite", "not equal", "double standard", "singled out", "take credit", "blamed"],
+      rephrased: "There is a perception of unfairness or bias in the workplace. The employee may feel that they are being treated differently from their peers, whether in task distribution, recognition, or how mistakes are handled. They might feel that their contributions are undervalued or that they are being unfairly blamed.",
+      suggestion: "Reflect on recent team interactions. Is recognition distributed evenly? Are new opportunities offered to everyone? To address this, you could explicitly outline the criteria for new projects or praise specific actions in a team setting, ensuring everyone gets a chance to be seen and acknowledged for their unique contributions."
     },
     {
-      name: "Communication",
-      keywords: ["communication", "unclear", "confusing", "no information", "not told", "no feedback", "left in the dark", "vague"],
-      rephrased: "Challenges related to communication were mentioned. This may include unclear instructions, insufficient information, a lack of feedback, or general confusion, hindering their ability to perform tasks effectively or understand expectations.",
-      suggestion: "Strive for clarity, consistency, and timeliness in all communications. Ensure that important information is disseminated effectively and that channels are open for questions and clarifications. Provide regular, constructive feedback. Consider if information is being shared adequately to prevent team members from feeling 'left in the dark'."
+      name: "Communication Gaps",
+      keywords: ["communication", "unclear", "confusing", "no information", "no feedback", "left in the dark", "vague instructions"],
+      rephrased: "The employee is struggling with a lack of clear communication. They may find instructions to be vague, feel uninformed about important changes, or desire more constructive feedback on their performance. This uncertainty can make it difficult for them to meet expectations.",
+      suggestion: "Consider increasing the frequency or clarity of communication. After giving instructions, you could ask, 'What questions do you have?' or 'Can you quickly summarize the next steps to make sure we're aligned?' Regular, informal check-ins can also provide a space to clarify expectations and provide ongoing feedback."
     }
   ];
 

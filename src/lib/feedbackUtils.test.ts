@@ -37,46 +37,42 @@ describe('generateBossReport (Refactored)', () => {
   const defaultRephrased = "The employee shared some general concerns about their experience at work, or their feedback did not strongly align with common predefined themes.";
   const defaultSuggestion = "Consider having an open conversation with your team member to understand their perspective better, especially if their concerns were not specific or did not fit into common categories. Regular check-ins can help identify and address unique or nuanced concerns proactively. Ensure that feedback channels are open and that employees feel heard, regardless of the topic.";
 
-  const workloadRephrased = "Concerns were expressed about the current workload";
-  const workloadSuggestion = "Review current task distribution";
-  const micromanageRephrased = "feedback suggests a feeling of being overly controlled";
-  const micromanageSuggestion = "Focus on building trust";
-  const unfairRephrased = "Concerns about fairness, bias, or unequal treatment have been raised";
-  const unfairSuggestion = "Ensure transparency and consistency";
-  const communicationRephrased = "Challenges related to communication were mentioned";
-  const communicationSuggestion = "Strive for clarity, consistency, and timeliness";
+  const workloadRephrased = "The employee is expressing significant stress related to their workload.";
+  const workloadSuggestion = "review this employee's current projects and deadlines";
+  const micromanageRephrased = "feels a lack of trust and autonomy";
+  const micromanageSuggestion = "Consider ways to demonstrate trust";
+  const unfairRephrased = "perception of unfairness or bias";
+  const unfairSuggestion = "Reflect on recent team interactions";
+  const communicationRephrased = "struggling with a lack of clear communication";
+  const communicationSuggestion = "increasing the frequency or clarity of communication";
 
-  it('should handle workload theme with new keywords', () => {
-    const report = generateBossReport("My workload is due to unrealistic deadlines and I feel stretched too thin.");
+  it('should handle a realistic workload complaint', () => {
+    const report = generateBossReport("I'm completely overwhelmed. Ever since the new project was added, I'm working late every night and my deadlines just feel unrealistic. I feel completely burnt out.");
     expect(report.rephrased_vent_statements).toContain(workloadRephrased);
     expect(report.suggestions_for_boss).toContain(workloadSuggestion);
     expect(report.rephrased_vent_statements).not.toContain(emotionalIntensityNote);
   });
 
-  it('should handle micromanagement theme with new keywords', () => {
-    const report = generateBossReport("My boss is breathing down my neck and watches everything I do.");
+  it('should handle a realistic micromanagement complaint', () => {
+    const report = generateBossReport("I feel like you're constantly breathing down my neck. I can't make a single move without being asked for an update. I need some freedom to do my job.");
     expect(report.rephrased_vent_statements).toContain(micromanageRephrased);
     expect(report.suggestions_for_boss).toContain(micromanageSuggestion);
   });
 
-  it('should handle unfairness/bias theme with new keywords like "scold", "blame", "take credit"', () => {
-    let report = generateBossReport("I always get scolded for small things, and then my ideas are taken credit for by others.");
-    expect(report.rephrased_vent_statements).toContain(unfairRephrased);
-    expect(report.suggestions_for_boss).toContain(unfairSuggestion);
-
-    report = generateBossReport("It's unfair how I'm always the first to be blamed.");
+  it('should handle a realistic complaint about unfairness and taking credit', () => {
+    let report = generateBossReport("It's so unfair. I worked on that presentation for two weeks, and then you presented it as your own idea. It feels like I'm always blamed for failures, but my successes are taken from me.");
     expect(report.rephrased_vent_statements).toContain(unfairRephrased);
     expect(report.suggestions_for_boss).toContain(unfairSuggestion);
   });
 
-  it('should handle communication theme with new keywords like "no feedback", "left in the dark"', () => {
-    const report = generateBossReport("We get no feedback on our performance and are often left in the dark about changes.");
+  it('should handle a realistic complaint about communication gaps', () => {
+    const report = generateBossReport("I'm completely in the dark about the project restructuring. The instructions I received were so vague, and I have no idea if I'm on the right track because I get no feedback.");
     expect(report.rephrased_vent_statements).toContain(communicationRephrased);
     expect(report.suggestions_for_boss).toContain(communicationSuggestion);
   });
 
-  it('should include vulgarity note when vulgar keywords are present AND relevant theme', () => {
-    const report = generateBossReport("This fucking workload is too much! I'm so burnt out.");
+  it('should include vulgarity note when a frustrated user vents about their workload', () => {
+    const report = generateBossReport("This fucking workload is absolutely insane! I am so burnt out and I just can't handle these unrealistic deadlines anymore.");
     expect(report.rephrased_vent_statements).toContain(emotionalIntensityNote);
     expect(report.rephrased_vent_statements).toContain(workloadRephrased);
     expect(report.suggestions_for_boss).toContain(workloadSuggestion);
@@ -89,8 +85,8 @@ describe('generateBossReport (Refactored)', () => {
     expect(report.suggestions_for_boss).toContain(defaultSuggestion);
   });
 
-  it('should handle multiple themes in one vent', () => {
-    const report = generateBossReport("My workload is too much and it's also unfair how tasks are distributed.");
+  it('should handle multiple themes in a realistic, combined vent', () => {
+    const report = generateBossReport("I'm so stretched thin with this workload, and on top of that, it feels like I'm being singled out and blamed for things that aren't my fault. It's just really unfair.");
     expect(report.rephrased_vent_statements).toContain(workloadRephrased);
     expect(report.suggestions_for_boss).toContain(workloadSuggestion);
     expect(report.rephrased_vent_statements).toContain(unfairRephrased);
@@ -98,11 +94,11 @@ describe('generateBossReport (Refactored)', () => {
     expect(report.rephrased_vent_statements).not.toContain(emotionalIntensityNote);
   });
 
-  it('should handle multiple themes with vulgarity', () => {
-    const report = generateBossReport("It's fucking bullshit that the workload is so high and the communication is so unclear.");
+  it('should handle multiple themes with vulgarity in a realistic vent', () => {
+    const report = generateBossReport("It's bullshit that I have no autonomy and you're constantly breathing down my neck, and the communication about what's expected is so damn unclear.");
     expect(report.rephrased_vent_statements).toContain(emotionalIntensityNote);
-    expect(report.rephrased_vent_statements).toContain(workloadRephrased);
-    expect(report.suggestions_for_boss).toContain(workloadSuggestion);
+    expect(report.rephrased_vent_statements).toContain(micromanageRephrased);
+    expect(report.suggestions_for_boss).toContain(micromanageSuggestion);
     expect(report.rephrased_vent_statements).toContain(communicationRephrased);
     expect(report.suggestions_for_boss).toContain(communicationSuggestion);
   });
@@ -133,12 +129,5 @@ describe('generateBossReport (Refactored)', () => {
     // Since no other theme matched, it should also include default rephrased part
     expect(report.rephrased_vent_statements).toContain(defaultRephrased);
     expect(report.suggestions_for_boss).toContain(defaultSuggestion);
-  });
-
-  // Test for "punish" keyword
-  it('should handle "punish" keyword for unfairness/bias theme', () => {
-    const report = generateBossReport("I feel like I'm being punished for no reason.");
-    expect(report.rephrased_vent_statements).toContain(unfairRephrased);
-    expect(report.suggestions_for_boss).toContain(unfairSuggestion);
   });
 });

@@ -44,39 +44,47 @@ const Index = () => {
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
       
+      console.log('[VRD] Audio stream obtained successfully:', stream); // VRD Log
       return stream;
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('[VRD] Error accessing microphone:', error); // VRD Log (enhanced)
       toast.error('Could not access microphone');
       return null;
     }
   }, []);
 
   const analyzeAudio = useCallback(() => {
-    console.log('analyzeAudio called, isRecording:', isRecording);
-    if (!analyserRef.current) return;
+    console.log('[VRD] analyzeAudio called. isRecording:', isRecording); // VRD Log
+    if (!analyserRef.current) {
+      // console.log('[VRD] analyserRef.current is null, returning.'); // Optional: if you want to log this case
+      return;
+    }
+    console.log('[VRD] analyserRef.current is valid.'); // VRD Log
     
     const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
-    console.log('analyzeAudio - dataArray slice (first 10):', dataArray.slice(0, 10));
+    console.log('[VRD] dataArray slice (first 20):', dataArray.slice(0, 20)); // VRD Log
     
     const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
     const normalizedLevel = average / 255;
+    console.log('[VRD] normalizedLevel:', normalizedLevel); // VRD Log
     
     setAudioLevel(normalizedLevel);
     
     // Update boss expression based on audio level
-    let newExpression: 'neutral' | 'confused' | 'anxious' | 'afraid' = 'neutral';
-    if (normalizedLevel > 0.6) { // Changed from 0.7
-      newExpression = 'afraid';
-    } else if (normalizedLevel > 0.3) { // Changed from 0.4
-      newExpression = 'anxious';
-    } else if (normalizedLevel > 0.15) { // Changed from 0.2
-      newExpression = 'confused';
+    let determinedExpression: 'neutral' | 'confused' | 'anxious' | 'afraid' = 'neutral';
+    if (normalizedLevel > 0.6) {
+      determinedExpression = 'afraid';
+    } else if (normalizedLevel > 0.3) {
+      determinedExpression = 'anxious';
+    } else if (normalizedLevel > 0.15) {
+      determinedExpression = 'confused';
     }
-    setBossExpression(newExpression);
-    console.log('analyzeAudio - normalizedLevel:', normalizedLevel, 'newExpression:', newExpression);
+    // The existing log for newExpression was similar, this makes it specific to VRD
+    console.log('[VRD] determinedExpression:', determinedExpression, ' (based on normalizedLevel:', normalizedLevel, ')'); // VRD Log
+    setBossExpression(determinedExpression);
+    // Removed the old log: console.log('analyzeAudio - normalizedLevel:', normalizedLevel, 'newExpression:', newExpression);
   }, [isRecording, setAudioLevel, setBossExpression]);
 
   const setupSpeechRecognition = useCallback(() => {
@@ -125,10 +133,12 @@ const Index = () => {
     }
     
     // Start audio analysis loop
+    console.log('[VRD] Starting analyzeLoop. isRecording should be true:', isRecording); // VRD Log
     const analyzeLoop = () => {
+      // console.log('[VRD] In analyzeLoop, about to call analyzeAudio. Frame:', requestAnimationFrameID); // Optional VRD Log
       if (isRecording) {
         analyzeAudio();
-        requestAnimationFrame(analyzeLoop);
+        requestAnimationFrame(analyzeLoop); // Note: requestAnimationFrameID is not directly available here
       }
     };
     analyzeLoop();
@@ -194,8 +204,8 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Avatar Creator Dialog */}
         <Dialog open={showAvatarCreator} onOpenChange={setShowAvatarCreator}>
-          <DialogContent className="max-w-4xl h-[80vh] p-0"> {/* Adjusted for more space */}
-            <DialogHeader className="p-4">
+          <DialogContent className="max-w-[90vw] w-full h-[90vh] flex flex-col p-0"> {/* Applied new className and removed default padding p-0 */}
+            <DialogHeader className="p-4 shrink-0"> {/* Added shrink-0 to prevent header from growing */}
               <DialogTitle>Create Your Boss's 3D Avatar</DialogTitle>
               <DialogDescription>
                 You are now in the Ready Player Me editor.
@@ -203,9 +213,10 @@ const Index = () => {
                 Customize the avatar as you see fit, then click "Next" or "Export Avatar" to save it.
               </DialogDescription>
             </DialogHeader>
-            <div style={{ width: '100%', height: 'calc(80vh - 100px)', border: 'none' }}> {/* Adjusted height */}
+            {/* Updated div to use flex-grow and Tailwind classes */}
+            <div className="w-full flex-grow border-none">
               <AvatarCreator
-                subdomain="bossvent" // Changed from "bossvent-demo"
+                subdomain="bossvent"
                 config={{ clearCache: true, bodyType: 'fullbody', language: 'en' }}
                 onAvatarExported={(event: AvatarExportedEvent) => {
                   console.log(`Avatar exported: ${event.data.url}`);
@@ -284,22 +295,27 @@ const Index = () => {
                   <p className="text-sm text-green-600">✓ 3D Avatar Ready</p>
                 )}
 
-                {/* Start Venting Button - enabled if 3D model URL and email are present */}
+                {/* Start Venting Button - enabled if 2D avatar image and email are present */}
                 <Button
                   onClick={startVenting}
                   size="lg"
                   className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                  disabled={!avatarModelUrl || !bossEmail}
+                  disabled={!avatarImage || !bossEmail}
                 >
                   <Mic className="mr-2 h-5 w-5" />
                   Start Venting
                 </Button>
-                {(!avatarModelUrl || !bossEmail) && (
+                {/* Updated helper text */}
+                {(!avatarImage || !bossEmail) && (
                   <p className="text-sm text-gray-500 mt-2">
-                    Please {(!bossEmail && !avatarModelUrl) ? "enter boss's email, upload a photo, and create a 3D avatar" :
-                            !avatarModelUrl ? "create the 3D avatar" :
-                            !bossEmail ? "enter the boss's email" : ""} to start venting.
+                    Please upload a boss's photo and enter their email to start venting.
                   </p>
+                )}
+                {/* Reminder about optional 3D avatar if 2D is present but 3D model is not */}
+                {avatarImage && bossEmail && !avatarModelUrl && (
+                   <p className="text-xs text-gray-400 mt-1">
+                     (Optional: Create a 3D avatar for a more immersive experience)
+                   </p>
                 )}
               </div>
             </div>

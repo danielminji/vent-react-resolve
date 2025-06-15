@@ -141,23 +141,25 @@ export const BossAvatar: React.FC<BossAvatarProps> = ({
       </h3>
 
       {modelUrl ? (
-        // Dual Display: 2D above 3D
-        <div className="w-full flex flex-col items-center space-y-3">
+        // Dual Display: 2D and 3D, same size
+        <div className="w-full flex flex-col items-center space-y-4">
+          {/* 2D Image Frame */}
           <div
-            className="w-24 h-24 rounded-full overflow-hidden transition-all duration-200 ease-in-out border-2"
-            style={{ ...imageStyle, borderColor: imageStyle.borderColor || '#ccc' }} // Ensure borderColor is always applied
+            className="w-full max-w-xs h-64 rounded-lg border-2 overflow-hidden shadow-md"
+            style={{ ...imageStyle, borderColor: imageStyle.borderColor || '#ccc' }}
           >
             <img src={avatarImage} alt="Boss 2D Preview" className="w-full h-full object-cover" />
           </div>
-          <div className="w-full max-w-xs h-72 rounded-lg border-2 overflow-hidden bg-gray-300">
-            <Canvas camera={{ position: [0, 0.1, 1.8], fov: 40 }}>
-              <ambientLight intensity={1.2} />
-              <directionalLight position={[3, 3, 5]} intensity={2.8} />
-              <Environment preset="apartment" />
+          {/* 3D Model Frame */}
+          <div className="w-full max-w-xs h-64 rounded-lg border-2 overflow-hidden bg-gray-300 shadow-md">
+            <Canvas camera={{ position: [0, 0.1, 1.8], fov: 40 }}> {/* Values from example */}
+              <ambientLight intensity={1.2} /> {/* Value from example */}
+              <directionalLight position={[3, 3, 5]} intensity={2.8} /> {/* Value from example */}
+              <Environment preset="apartment" /> {/* Value from example */}
               <Suspense fallback={null}>
                 <Model modelUrl={modelUrl} expression={expression} audioLevel={audioLevel} />
               </Suspense>
-              <OrbitControls target={[0, -0.2, 0]} />
+              <OrbitControls target={[0, -0.2, 0]} /> {/* Value from example */}
             </Canvas>
           </div>
         </div>
@@ -165,8 +167,8 @@ export const BossAvatar: React.FC<BossAvatarProps> = ({
         // 2D Only Display
         <div className="w-full flex flex-col items-center">
           <div
-            className="w-48 h-48 rounded-full overflow-hidden transition-all duration-200 ease-in-out border-2"
-            style={{ ...imageStyle, borderColor: imageStyle.borderColor || '#ccc' }} // Ensure borderColor is always applied
+            className="w-full max-w-xs h-64 rounded-lg border-2 overflow-hidden shadow-md" // Consistent size
+            style={{ ...imageStyle, borderColor: imageStyle.borderColor || '#ccc' }}
           >
             <img src={avatarImage} alt="Boss 2D Avatar" className="w-full h-full object-cover" />
           </div>

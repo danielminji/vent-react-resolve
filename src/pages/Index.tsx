@@ -204,8 +204,8 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Avatar Creator Dialog */}
         <Dialog open={showAvatarCreator} onOpenChange={setShowAvatarCreator}>
-          <DialogContent className="max-w-[90vw] w-full h-[90vh] flex flex-col p-0"> {/* Applied new className and removed default padding p-0 */}
-            <DialogHeader className="p-4 shrink-0"> {/* Added shrink-0 to prevent header from growing */}
+          <DialogContent className="max-w-[90vw] w-full h-[85vh] flex flex-col p-0 sm:p-4"> {/* Adjusted height and padding */}
+            <DialogHeader className="p-4 shrink-0">
               <DialogTitle>Create Your Boss's 3D Avatar</DialogTitle>
               <DialogDescription>
                 You are now in the Ready Player Me editor.
@@ -213,8 +213,7 @@ const Index = () => {
                 Customize the avatar as you see fit, then click "Next" or "Export Avatar" to save it.
               </DialogDescription>
             </DialogHeader>
-            {/* Updated div to use flex-grow and Tailwind classes */}
-            <div className="w-full flex-grow border-none">
+            <div className="w-full flex-grow border-none overflow-hidden"> {/* Added overflow-hidden */}
               <AvatarCreator
                 subdomain="bossvent"
                 config={{ clearCache: true, bodyType: 'fullbody', language: 'en' }}
@@ -349,10 +348,10 @@ const Index = () => {
               
               <div className="flex items-center justify-center">
                 <BossAvatar 
-                  modelUrl={avatarModelUrl} // Changed from imageUrl
+                  avatarImage={avatarImage} // Ensured avatarImage is passed
+                  modelUrl={avatarModelUrl}
                   expression={bossExpression}
                   audioLevel={audioLevel}
-                  // imageUrl={avatarImage} // Temporarily pass both if needed for fallback, or remove if Visage replaces 2D
                 />
               </div>
             </div>
